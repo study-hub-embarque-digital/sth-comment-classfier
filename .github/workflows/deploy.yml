@@ -1,0 +1,36 @@
+name: Deploy Application
+
+on:
+  workflow_run:
+    workflows: ["Publish Docker image"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Request Deploy Web Hook
+    runs-on: ubuntu-latest
+    environment: deploy
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Get the latest release tag
+        id: get_latest_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const latestRelease = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            core.setOutput('tag', latestRelease.data.tag_name);
+
+      - name: Request to the webhook to deploy
+        id: request_deploy
+        run: |
+          curl --location "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
+          --header "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}"
