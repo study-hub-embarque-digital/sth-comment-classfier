@@ -4,6 +4,7 @@ WORKDIR /code
 
 COPY ./requirements.txt /code/requirements.txt
 COPY ./preprocessing.py /code/preprocessing.py
+COPY ./ai.joblib /code/ai.joblib
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
